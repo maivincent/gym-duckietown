@@ -1373,7 +1373,7 @@ class Simulator(gym.Env):
             done_code = 'in-progress'
         return DoneRewardInfo(done=done, done_why=msg, reward=reward, done_code=done_code)
 
-    def _render_img(self, width, height, multi_fbo, final_fbo, img_array, top_down=True):
+    def _render_img(self, width, height, multi_fbo, final_fbo, img_array, top_down=True, drone = False, drone_params = [0, 0, 0, 0]):
         """
         Render an image of the environment into a frame buffer
         Produce a numpy RGB array image as output
@@ -1426,7 +1426,7 @@ class Simulator(gym.Env):
         if self.draw_bbox:
             y += 0.8
             gl.glRotatef(90, 1, 0, 0)
-        elif not top_down:
+        elif not (top_down or drone):
             y += self.cam_height
             gl.glRotatef(self.cam_angle[0], 1, 0, 0)
             gl.glRotatef(self.cam_angle[1], 0, 1, 0)
@@ -1446,6 +1446,16 @@ class Simulator(gym.Env):
                     # Up vector
                     0, 0, -1.0
             )
+        elif drone:
+            gl.gluLookAt(
+                x + drone_params[0],
+                2 + drone_params[2],
+                z + drone_params[1],
+                x + drone_params[0],
+                0,
+                z + drone_params[1],
+                np.sin(drone_params[3]), 0, -np.cos(drone_params[3])
+                )
         else:
             gl.gluLookAt(
                     # Eye position
@@ -1536,7 +1546,7 @@ class Simulator(gym.Env):
             gl.glVertex3f(corners[3, 0], 0.01, corners[3, 1])
             gl.glEnd()
 
-        if top_down:
+        if top_down or drone:
             gl.glPushMatrix()
             gl.glTranslatef(*self.cur_pos)
             gl.glScalef(1, 1, 1)
@@ -1600,7 +1610,7 @@ class Simulator(gym.Env):
 
         return observation
 
-    def render(self, mode='human', close=False):
+    def render(self, mode='human', drone_params = [0, 0, 0], close=False):
         """
         Render the environment for human viewing
         """
@@ -1611,6 +1621,7 @@ class Simulator(gym.Env):
             return
 
         top_down = mode == 'top_down'
+        drone = mode == 'drone'
         # Render the image
         img = self._render_img(
                 WINDOW_WIDTH,
@@ -1618,7 +1629,9 @@ class Simulator(gym.Env):
                 self.multi_fbo_human,
                 self.final_fbo_human,
                 self.img_array_human,
-                top_down=top_down
+                top_down=top_down,
+                drone = drone,
+                drone_params = drone_params
         )
 
         # self.undistort - for UndistortWrapper
@@ -1685,6 +1698,9 @@ class Simulator(gym.Env):
 
         # Force execution of queued commands
         gl.glFlush()
+
+        if mode == 'drone':
+            return img
 
 
 def get_dir_vec(cur_angle):
