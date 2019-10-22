@@ -1454,7 +1454,7 @@ class Simulator(gym.Env):
                 x + drone_params[0],
                 0,
                 z + drone_params[1],
-                np.sin(drone_params[3]), 0, -np.cos(drone_params[3])
+                np.sin(drone_params[3]-angle), 0, -np.cos(drone_params[3]-angle)
                 )
         else:
             gl.gluLookAt(
