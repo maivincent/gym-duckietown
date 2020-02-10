@@ -1373,7 +1373,7 @@ class Simulator(gym.Env):
             done_code = 'in-progress'
         return DoneRewardInfo(done=done, done_why=msg, reward=reward, done_code=done_code)
 
-    def _render_img(self, width, height, multi_fbo, final_fbo, img_array, top_down=True, drone = False, drone_params = [0, 0, 0, 0]):
+    def _render_img(self, width, height, multi_fbo, final_fbo, img_array, top_down=True, drone = False, drone_params = [0, 0, 0, 0], drone_angle_follow = False):
         """
         Render an image of the environment into a frame buffer
         Produce a numpy RGB array image as output
@@ -1447,6 +1447,10 @@ class Simulator(gym.Env):
                     0, 0, -1.0
             )
         elif drone:
+            if drone_angle_follow:
+                drone_angle_follow = drone_params[3] - angle
+            else:
+                drone_angle = drone_params[3]
             gl.gluLookAt(
                 x + drone_params[0],
                 2 + drone_params[2],
@@ -1454,7 +1458,7 @@ class Simulator(gym.Env):
                 x + drone_params[0],
                 0,
                 z + drone_params[1],
-                np.sin(drone_params[3]-angle), 0, -np.cos(drone_params[3]-angle)
+                np.sin(drone_angle), 0, -np.cos(drone_angle)
                 )
         else:
             gl.gluLookAt(
@@ -1610,7 +1614,7 @@ class Simulator(gym.Env):
 
         return observation
 
-    def render(self, mode='human', drone_params = [0, 0, 0], close=False):
+    def render(self, mode='human', drone_params = [0, 0, 0, 0], drone_angle_follow = False, close=False):
         """
         Render the environment for human viewing
         """
@@ -1631,7 +1635,8 @@ class Simulator(gym.Env):
                 self.img_array_human,
                 top_down=top_down,
                 drone = drone,
-                drone_params = drone_params
+                drone_params = drone_params,
+                drone_angle_follow = drone_angle_follow     # True if we want the drone angle to be w.r.t. the robot
         )
 
         # self.undistort - for UndistortWrapper
