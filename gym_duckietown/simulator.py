@@ -1448,7 +1448,7 @@ class Simulator(gym.Env):
             )
         elif drone:
             if drone_angle_follow:
-                drone_angle_follow = drone_params[3] - angle
+                drone_angle = drone_params[3] - angle
             else:
                 drone_angle = drone_params[3]
             gl.gluLookAt(
